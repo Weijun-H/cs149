@@ -34,7 +34,13 @@ int main() {
         // to you generate best and worse-case speedups
         
         // starter code populates array with random input values
-        values[i] = .001f + 2.998f * static_cast<float>(rand()) / RAND_MAX;
+        // values[i] = .001f + 2.998f * static_cast<float>(rand()) / RAND_MAX;
+
+        // maximum speedup version values[i] = 2.998f;
+
+        // minimum speedup version values have different values.
+        if (i % 8 == 0) values[i] = 2.998f;
+        else values[i] = 1.f;
     }
 
     // generate a gold version to check results
