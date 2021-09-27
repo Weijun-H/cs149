@@ -2,6 +2,8 @@
 #define _TASKSYS_H
 
 #include "itasksys.h"
+#include <mutex>
+#include <thread>
 
 /*
  * TaskSystemSerial: This class is the student's implementation of a
@@ -26,6 +28,9 @@ class TaskSystemSerial: public ITaskSystem {
  * of the ITaskSystem interface.
  */
 class TaskSystemParallelSpawn: public ITaskSystem {
+    private: 
+        int num_threads_;
+        std::thread* thread_pool_;
     public:
         TaskSystemParallelSpawn(int num_threads);
         ~TaskSystemParallelSpawn();
@@ -34,6 +39,7 @@ class TaskSystemParallelSpawn: public ITaskSystem {
         TaskID runAsyncWithDeps(IRunnable* runnable, int num_total_tasks,
                                 const std::vector<TaskID>& deps);
         void sync();
+        void threadRun(IRunnable* runnable, int num_total_tasks, std::mutex* mutex, int* counter);
 };
 
 /*

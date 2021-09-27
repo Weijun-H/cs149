@@ -53,9 +53,27 @@ TaskSystemParallelSpawn::TaskSystemParallelSpawn(int num_threads): ITaskSystem(n
     // Implementations are free to add new class member variables
     // (requiring changes to tasksys.h).
     //
+    this->num_threads_ = num_threads;
+    thread_pool_ = new std::thread[num_threads];
 }
 
-TaskSystemParallelSpawn::~TaskSystemParallelSpawn() {}
+TaskSystemParallelSpawn::~TaskSystemParallelSpawn() {
+    delete[] thread_pool_;
+}
+
+void TaskSystemParallelSpawn::threadRun(IRunnable* runnable, int num_total_tasks, std::mutex* mutex, int* counter) {
+    int cnt = -1;
+    while (cnt < num_total_tasks)
+    {
+        mutex->lock();
+        cnt = *counter;
+        *counter += 1;
+        mutex->unlock();
+        if (cnt >= num_total_tasks) break;
+        runnable->runTask(cnt, num_total_tasks);
+    }
+    
+}
 
 void TaskSystemParallelSpawn::run(IRunnable* runnable, int num_total_tasks) {
 
@@ -65,10 +83,17 @@ void TaskSystemParallelSpawn::run(IRunnable* runnable, int num_total_tasks) {
     // method in Part A.  The implementation provided below runs all
     // tasks sequentially on the calling thread.
     //
-
+    std::mutex* mutex = new std::mutex();
+    int* counter = new int;
+    *counter = 0;
     for (int i = 0; i < num_total_tasks; i++) {
-        runnable->runTask(i, num_total_tasks);
+        this->thread_pool_[i] = std::thread(&TaskSystemParallelSpawn::threadRun, this, runnable, num_total_tasks, mutex, counter);
     }
+    for (int i = 0; i < num_total_tasks; i++) {
+        this->thread_pool_[i].join();
+    }
+    delete counter;
+    delete mutex;
 }
 
 TaskID TaskSystemParallelSpawn::runAsyncWithDeps(IRunnable* runnable, int num_total_tasks,
